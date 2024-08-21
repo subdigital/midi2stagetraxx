@@ -1,0 +1,9 @@
+[package]
+name = "midi2stagetraxx"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+clap = { version = "4.5.16", features = ["derive"] }
+midi_file = { git = "https://github.com/subdigital/midi_file.git" }
