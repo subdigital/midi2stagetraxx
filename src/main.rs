@@ -59,19 +59,49 @@ fn main() -> Result<()> {
     let starting_bpm = 120.0;
     let mut tempo_micros_per_q: u32 = (micros_per_s / (starting_bpm / 60.0)) as u32;
     let mut ticks = 0;
+    let mut last_tempo_change_tick: u32 = 0;
+    let mut ellapsed_seconds = 0.0;
+    let mut last_midi_event_ts = 0.0;
 
     for track in file.tracks() {
         for event in track.events() {
             let dt = event.delta_time();
             let e = event.event();
             ticks += dt;
-            let timestamp = ticks_to_seconds(ticks, pulses_per_qn, tempo_micros_per_q);
             match e {
-                Event::Midi(msg) => handle_midi_msg(msg, timestamp, dt),
+                Event::Midi(msg) => {
+                    let ticks_since_last_tempo_change = ticks - last_tempo_change_tick;
+                    let mut timestamp = ellapsed_seconds
+                        + ticks_to_seconds(
+                            ticks_since_last_tempo_change,
+                            pulses_per_qn,
+                            tempo_micros_per_q,
+                        );
+
+                    // TODO: this is a hack to avoid multiple events at the same time,
+                    // but produces inconsistent results
+                    // if timestamp - last_midi_event_ts < 0.01 {
+                    //     timestamp += 0.01;
+                    // }
+                    last_midi_event_ts = timestamp;
+                    handle_midi_msg(
+                        msg,
+                        timestamp,
+                        ticks_since_last_tempo_change,
+                        args.override_midi_channel,
+                    )
+                }
 
                 Event::Meta(midi_file::file::MetaEvent::SetTempo(new_tempo)) => {
                     let bpm = micros_per_s / new_tempo.get() as f64 * 60.0;
                     eprintln!("-- Tempo change: {}", bpm);
+                    let ticks_since_last_tempo_change = ticks - last_tempo_change_tick;
+                    last_tempo_change_tick = ticks;
+                    ellapsed_seconds += ticks_to_seconds(
+                        ticks_since_last_tempo_change,
+                        pulses_per_qn,
+                        tempo_micros_per_q,
+                    );
                     tempo_micros_per_q = new_tempo.get()
                 }
 
@@ -95,24 +125,27 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn handle_note(note: &NoteMessage, timestamp: f64, on: bool) {
+fn handle_note(note: &NoteMessage, timestamp: f64, on: bool, ch: Option<u8>) {
     // [midi@00:48.50: N122.127@4]
     // off note has velocity 0
     let velocity = if on { note.velocity().get() } else { 0 };
+    // if !on {
+    //     return;
+    // }
     let msg = format!(
         "[midi@{}: N{:?}.{:?}@{:?}]",
         format_midi_time(timestamp),
         note.note_number().get(),
         velocity,
-        note.channel().get() + 1, // midi_file is 0-based
+        ch.unwrap_or(note.channel().get() + 1), // midi_file is 0-based
     );
     println!("{}", msg);
 }
 
-fn handle_midi_msg(msg: &Message, timestamp: f64, dt: u32) {
+fn handle_midi_msg(msg: &Message, timestamp: f64, dt: u32, ch: Option<u8>) {
     match msg {
-        Message::NoteOn(note) => handle_note(note, timestamp, true),
-        Message::NoteOff(note) => handle_note(note, timestamp, false),
+        Message::NoteOn(note) => handle_note(note, timestamp, true, ch),
+        Message::NoteOff(note) => handle_note(note, timestamp, false, ch),
         Message::Control(cc) => {
             // [midi@00:46.70: CC1.62@4]
             let msg = format!(
@@ -120,7 +153,7 @@ fn handle_midi_msg(msg: &Message, timestamp: f64, dt: u32) {
                 format_midi_time(timestamp),
                 cc.control() as u8,
                 cc.value().get(),
-                cc.channel().get() + 1, // midi_file is 0-based
+                ch.unwrap_or(cc.channel().get() + 1), // midi_file is 0-based
             );
             println!("{}", msg);
         }
