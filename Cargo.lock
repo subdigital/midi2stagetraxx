@@ -145,7 +145,7 @@ dependencies = [
 [[package]]
 name = "midi_file"
 version = "0.0.5"
-source = "git+https://github.com/subdigital/midi_file.git#4b4cac9f5577601aee200877ee83a634a1a3176f"
+source = "git+https://github.com/subdigital/midi_file.git#1a655fec325289cf7f799d2bbf6d950726ea734a"
 dependencies = [
  "log",
  "snafu",
