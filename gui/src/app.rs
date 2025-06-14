@@ -1,6 +1,6 @@
-use midi2stagetraxx_core::{Extractor, MidiFormatter, StageTraxxFormatter, Message, MidiEvent};
 use anyhow::{Context, Result};
 use eframe::egui;
+use midi2stagetraxx_core::{Extractor, Message, MidiEvent, MidiFormatter, StageTraxxFormatter};
 use midi_file::MidiFile;
 use std::path::PathBuf;
 
@@ -88,9 +88,6 @@ impl MidiConverterApp {
 impl eframe::App for MidiConverterApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("MIDI to StageTraxx Converter");
-            ui.separator();
-
             ui.horizontal(|ui| {
                 ui.label("MIDI File:");
                 if let Some(path) = &self.midi_file_path {
