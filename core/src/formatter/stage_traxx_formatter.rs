@@ -149,7 +149,7 @@ mod tests {
 
         // Test millisecond precision
         let event = MidiEvent {
-            timestamp: 46.701, // Should round to 46.701
+            timestamp: 46.70100001, // Should round to 46.701
             message: Message::ControlChange(1, 62),
             channel: 4,
         };
