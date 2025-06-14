@@ -7,3 +7,6 @@ edition = "2021"
 anyhow = "1.0.86"
 clap = { version = "4.5.16", features = ["derive"] }
 midi_file = { git = "https://github.com/subdigital/midi_file.git" }
+eframe = "0.30.0"
+egui = "0.30.0"
+rfd = "0.15.1"
