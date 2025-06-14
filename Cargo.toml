@@ -1,12 +1,27 @@
-[package]
-name = "midi2stagetraxx"
+[workspace]
+resolver = "2"
+members = [
+    "core",
+    "cli", 
+    "gui",
+]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
+authors = ["Ben Scheirman"]
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.86"
-clap = { version = "4.5.16", features = ["derive"] }
 midi_file = { git = "https://github.com/subdigital/midi_file.git" }
+
+# Core dependencies
+midi2stagetraxx-core = { path = "core" }
+
+# CLI dependencies
+clap = { version = "4.5.16", features = ["derive"] }
+
+# GUI dependencies
 eframe = "0.30.0"
 egui = "0.30.0"
 rfd = "0.15.1"

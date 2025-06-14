@@ -1,26 +1,13 @@
 use anyhow::{Context, Result};
-use clap::arg;
 use clap::Parser;
-
-use formatter::MidiFormatter;
+use midi2stagetraxx_core::{Extractor, MidiFormatter, StageTraxxFormatter, Message};
 use midi_file::MidiFile;
-mod extractor;
-use extractor::Extractor;
-
-use crate::midi_event::Message;
-
-mod formatter;
-mod midi_event;
-mod gui;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-    #[arg(short, long, help = "Launch GUI mode")]
-    gui: bool,
-
-    #[arg(short, long, required_unless_present = "gui")]
-    midi_file: Option<String>,
+    #[arg(short, long)]
+    midi_file: String,
 
     #[arg(
         short,
@@ -46,21 +33,10 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    if args.gui {
-        let native_options = eframe::NativeOptions::default();
-        return eframe::run_native(
-            "MIDI to StageTraxx Converter",
-            native_options,
-            Box::new(|cc| Ok(Box::new(gui::MidiConverterApp::new(cc)))),
-        )
-        .map_err(|e| anyhow::anyhow!("Failed to run GUI: {}", e));
-    }
-
-    let midi_file_path = args.midi_file.expect("MIDI file required when not in GUI mode");
-    let midi_file = MidiFile::load(midi_file_path).context("load midi file")?;
+    let midi_file = MidiFile::load(&args.midi_file).context("load midi file")?;
     let mut extractor = Extractor::new(midi_file, args.override_midi_channel)?;
     let events = extractor.run()?;
-    let formatter = formatter::StageTraxxFormatter::new();
+    let formatter = StageTraxxFormatter::new();
 
     let exception_notes: Vec<u8> = args.off_collision_exceptions.unwrap_or_default();
     
@@ -79,6 +55,11 @@ fn main() -> Result<()> {
             }
         }
         println!("{}", formatter.format(event));
+    }
+
+    // Handle the last event
+    if let Some(last_event) = events.last() {
+        println!("{}", formatter.format(last_event));
     }
 
     Ok(())

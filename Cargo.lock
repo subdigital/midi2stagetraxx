@@ -1843,13 +1843,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "midi2stagetraxx"
+name = "midi2stagetraxx-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "midi2stagetraxx-core",
+ "midi_file",
+]
+
+[[package]]
+name = "midi2stagetraxx-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "midi_file",
+]
+
+[[package]]
+name = "midi2stagetraxx-gui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "eframe",
  "egui",
+ "midi2stagetraxx-core",
  "midi_file",
  "rfd",
 ]

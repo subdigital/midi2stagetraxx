@@ -1,0 +1,8 @@
+[package]
+name = "midi2stagetraxx-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+midi_file.workspace = true

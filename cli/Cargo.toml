@@ -1,0 +1,14 @@
+[package]
+name = "midi2stagetraxx-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "midi2stagetraxx"
+path = "src/main.rs"
+
+[dependencies]
+midi2stagetraxx-core.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+midi_file.workspace = true

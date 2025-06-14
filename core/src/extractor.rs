@@ -54,8 +54,7 @@ impl Extractor {
 
     pub fn run(&mut self) -> Result<Vec<midi_event::MidiEvent>> {
         let tracks = self.midi_file.tracks();
-        let track_events: Vec<TrackEvent> =
-            tracks.flat_map(|t| t.events().map(|e| e.clone())).collect();
+        let track_events: Vec<TrackEvent> = tracks.flat_map(|t| t.events().cloned()).collect();
 
         let mut results: Vec<midi_event::MidiEvent> = Vec::new();
         for track_event in track_events {
@@ -147,7 +146,7 @@ impl Extractor {
     ) -> midi_event::MidiEvent {
         midi_event::MidiEvent {
             timestamp,
-            message: midi_event::Message::ControlChange(cc.control() as u8, cc.value().get() as u8),
+            message: midi_event::Message::ControlChange(cc.control() as u8, cc.value().get()),
             channel: self.override_midi_channel.unwrap_or(cc.channel().get() + 1), // midi_file is 0-based
         }
     }

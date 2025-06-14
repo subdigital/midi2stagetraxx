@@ -1,0 +1,16 @@
+[package]
+name = "midi2stagetraxx-gui"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "midi2stagetraxx-gui"
+path = "src/main.rs"
+
+[dependencies]
+midi2stagetraxx-core.workspace = true
+anyhow.workspace = true
+eframe.workspace = true
+egui.workspace = true
+rfd.workspace = true
+midi_file.workspace = true

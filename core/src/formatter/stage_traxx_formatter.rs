@@ -10,6 +10,12 @@ impl StageTraxxFormatter {
     }
 }
 
+impl Default for StageTraxxFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MidiFormatter for StageTraxxFormatter {
     fn format(&self, event: &MidiEvent) -> String {
         // [midi@00:46.70: CC1.62@4]

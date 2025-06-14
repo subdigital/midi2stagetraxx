@@ -1,10 +1,10 @@
-use crate::extractor::Extractor;
-use crate::formatter::{MidiFormatter, StageTraxxFormatter};
-use crate::midi_event::Message;
+use midi2stagetraxx_core::{Extractor, MidiFormatter, StageTraxxFormatter, Message, MidiEvent};
+use anyhow::{Context, Result};
 use eframe::egui;
 use midi_file::MidiFile;
 use std::path::PathBuf;
 
+#[derive(Default)]
 pub struct MidiConverterApp {
     midi_file_path: Option<PathBuf>,
     override_midi_channel: Option<u8>,
@@ -14,21 +14,6 @@ pub struct MidiConverterApp {
     output: String,
     error: Option<String>,
     channel_input: String,
-}
-
-impl Default for MidiConverterApp {
-    fn default() -> Self {
-        Self {
-            midi_file_path: None,
-            override_midi_channel: None,
-            skip_off_note_collisions: false,
-            off_collision_exceptions: Vec::new(),
-            exceptions_input: String::new(),
-            output: String::new(),
-            error: None,
-            channel_input: String::new(),
-        }
-    }
 }
 
 impl MidiConverterApp {
@@ -45,45 +30,58 @@ impl MidiConverterApp {
             return;
         };
 
-        match MidiFile::load(path) {
-            Ok(midi_file) => {
-                match Extractor::new(midi_file, self.override_midi_channel) {
-                    Ok(mut extractor) => {
-                        match extractor.run() {
-                            Ok(events) => {
-                                let formatter = StageTraxxFormatter::new();
-                                let mut output_lines = Vec::new();
+        match self.load_and_process_midi(path) {
+            Ok(output) => self.output = output,
+            Err(e) => self.error = Some(e.to_string()),
+        }
+    }
 
-                                for (event, next) in events.iter().zip(events.iter().skip(1)) {
-                                    let diff = next.timestamp - event.timestamp;
-                                    if let Message::NoteOff(note, _) = event.message {
-                                        if diff <= 0.01 && self.skip_off_note_collisions {
-                                            if self.off_collision_exceptions.contains(&note) {
-                                                // Don't skip this note - it's an exception
-                                                output_lines.push(formatter.format(event));
-                                                continue;
-                                            }
-                                            // Skip the note off event
-                                            continue;
-                                        }
-                                    }
-                                    output_lines.push(formatter.format(event));
-                                }
+    fn load_and_process_midi(&self, path: &std::path::PathBuf) -> Result<String> {
+        let midi_file = MidiFile::load(path).context("Failed to load MIDI file")?;
+        self.process_midi_file(midi_file)
+    }
 
-                                if let Some(last_event) = events.last() {
-                                    output_lines.push(formatter.format(last_event));
-                                }
+    fn process_midi_file(&self, midi_file: MidiFile) -> Result<String> {
+        let mut extractor = Extractor::new(midi_file, self.override_midi_channel)
+            .context("Failed to create extractor")?;
+        let events = extractor.run().context("Failed to extract events")?;
+        Ok(self.convert_events(events))
+    }
 
-                                self.output = output_lines.join("\n");
-                            }
-                            Err(e) => self.error = Some(format!("Failed to extract events: {}", e)),
-                        }
+    fn convert_events(&self, events: Vec<MidiEvent>) -> String {
+        let formatter = StageTraxxFormatter::new();
+        let mut output_lines = Vec::new();
+
+        for (event, next) in events.iter().zip(events.iter().skip(1)) {
+            let diff = next.timestamp - event.timestamp;
+            if let Message::NoteOff(note, _) = event.message {
+                // Sometimes if notes are turned on and then off in quick succession the midi
+                // engine in StageTraxx (or the receiving app/device) may not be able to
+                // distinguish the messages, leading to a light or setting staying on.
+                // If this setting is turned on, we'll proactively filter out these off notes.
+                // There is an exception for some notes where this is needed, so we'll check the
+                // exceptions before skipping.
+
+                if diff <= 0.01 && self.skip_off_note_collisions {
+                    if self.off_collision_exceptions.contains(&note) {
+                        // Don't skip this note - it's an exception
+                        output_lines.push(formatter.format(event));
+                        continue;
                     }
-                    Err(e) => self.error = Some(format!("Failed to create extractor: {}", e)),
+
+                    // Skip the note off event
+                    continue;
                 }
             }
-            Err(e) => self.error = Some(format!("Failed to load MIDI file: {}", e)),
+
+            output_lines.push(formatter.format(event));
         }
+
+        if let Some(last_event) = events.last() {
+            output_lines.push(formatter.format(last_event));
+        }
+
+        output_lines.join("\n")
     }
 }
 
