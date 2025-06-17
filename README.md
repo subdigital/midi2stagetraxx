@@ -2,9 +2,22 @@
 
 A tool for converting MIDI files into StageTraxx-compatible format.
 
+![the midi2stagetraxx gui app running on macOS](assets/gui.png)
+
+## Two Flavors
+
+- A gui application that runs on macOS, Linux, or Windows.
+- A command-line application that runs in a terminal.
+
+If you aren't a developer or aren't familiar with the Rust toolchain,
+check the [Releases](https://github.com/subdigital/midi2stagetraxx/releases) page
+and download the latest release for your operating system.
+
+If you'd like to build from source, read on...
+
 ## Project Structure
 
-This is a Rust workspace with three crates:
+This is a [Rust](https://www.rust-lang.org/) workspace with three crates:
 
 - **`core/`** - Shared library with MIDI processing logic
 - **`cli/`** - Command-line interface
