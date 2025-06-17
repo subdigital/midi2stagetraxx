@@ -3,8 +3,11 @@ name: Release Build
 on:
   push:
     tags:
-      - 'v*'
+      - '*'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,19 +25,19 @@ jobs:
             target: x86_64-unknown-linux-gnu
             cli_name: midi2stagetraxx
             gui_name: midi2stagetraxx-gui
-            
-          - name: macOS-x86_64
+
+          - name: macOS-Intel
             os: macos-latest
             target: x86_64-apple-darwin
             cli_name: midi2stagetraxx
             gui_name: midi2stagetraxx-gui
-            
-          - name: macOS-aarch64
+
+          - name: macOS-arm64
             os: macos-latest
             target: aarch64-apple-darwin
             cli_name: midi2stagetraxx
             gui_name: midi2stagetraxx-gui
-            
+
           - name: Windows-x86_64
             os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -70,29 +73,29 @@ jobs:
           mkdir -p dist
           cp target/${{ matrix.platform.target }}/release/${{ matrix.platform.cli_name }} dist/
           cp target/${{ matrix.platform.target }}/release/${{ matrix.platform.gui_name }} dist/
-          
+
           # Create README for the distribution
           cat > dist/README.txt << EOF
           MIDI to StageTraxx Converter
           ============================
-          
+
           This package contains two programs:
-          
+
           1. ${{ matrix.platform.cli_name }} - Command-line interface
           2. ${{ matrix.platform.gui_name }} - Graphical user interface
-          
+
           CLI Usage:
           ----------
           ./${{ matrix.platform.cli_name }} -m yourfile.mid
-          
+
           For more options:
           ./${{ matrix.platform.cli_name }} --help
-          
+
           GUI Usage:
           ----------
           Double-click ${{ matrix.platform.gui_name }} or run from terminal:
           ./${{ matrix.platform.gui_name }}
-          
+
           EOF
 
       - name: Create archive
@@ -117,7 +120,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -136,27 +139,27 @@ jobs:
             artifacts/**/*.zip
           body: |
             # MIDI to StageTraxx Converter
-            
+
             ## What's New
             - TODO: Add release notes here
-            
+
             ## Downloads
             - **macOS**: Download the `.tar.gz` file for your architecture (x86_64 or aarch64)
             - **Linux**: Download the Linux `.tar.gz` file
             - **Windows**: Download the `.zip` file
-            
+
             ## Installation
-            
+
             ### macOS
             1. Download and extract the archive
-            2. You may need to allow the apps in System Preferences > Security & Privacy
+            2. You may need to allow the app in System Preferences > Security & Privacy
             3. Run from Terminal or double-click the GUI app
-            
+
             ### Linux
             1. Download and extract the archive
             2. Make the binaries executable: `chmod +x midi2stagetraxx midi2stagetraxx-gui`
             3. Run from terminal
-            
+
             ### Windows
             1. Download and extract the ZIP file
             2. Run the executables directly
