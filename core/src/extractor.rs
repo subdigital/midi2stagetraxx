@@ -248,49 +248,69 @@ mod tests {
         // Test basic conversion: 480 ticks per quarter note at 120 BPM
         let pulses_per_qn = 480;
         let tempo_120_bpm = 500_000; // 120 BPM = 500,000 microseconds per quarter note
-        
+
         // 480 ticks = 1 quarter note = 0.5 seconds at 120 BPM
         let result = ticks_to_seconds(480, pulses_per_qn, tempo_120_bpm);
-        assert!((result - 0.5).abs() < 0.001, "Expected ~0.5s, got {}", result);
-        
+        assert!(
+            (result - 0.5).abs() < 0.001,
+            "Expected ~0.5s, got {}",
+            result
+        );
+
         // 960 ticks = 2 quarter notes = 1.0 seconds at 120 BPM
         let result = ticks_to_seconds(960, pulses_per_qn, tempo_120_bpm);
-        assert!((result - 1.0).abs() < 0.001, "Expected ~1.0s, got {}", result);
+        assert!(
+            (result - 1.0).abs() < 0.001,
+            "Expected ~1.0s, got {}",
+            result
+        );
     }
 
     #[test]
     fn test_ticks_to_seconds_different_tempos() {
         let pulses_per_qn = 480;
-        
+
         // 60 BPM = 1,000,000 microseconds per quarter note
         let tempo_60_bpm = 1_000_000;
         let result = ticks_to_seconds(480, pulses_per_qn, tempo_60_bpm);
-        assert!((result - 1.0).abs() < 0.001, "Expected ~1.0s at 60 BPM, got {}", result);
-        
+        assert!(
+            (result - 1.0).abs() < 0.001,
+            "Expected ~1.0s at 60 BPM, got {}",
+            result
+        );
+
         // 240 BPM = 250,000 microseconds per quarter note
         let tempo_240_bpm = 250_000;
         let result = ticks_to_seconds(480, pulses_per_qn, tempo_240_bpm);
-        assert!((result - 0.25).abs() < 0.001, "Expected ~0.25s at 240 BPM, got {}", result);
+        assert!(
+            (result - 0.25).abs() < 0.001,
+            "Expected ~0.25s at 240 BPM, got {}",
+            result
+        );
     }
 
     #[test]
     fn test_ticks_to_seconds_edge_cases() {
         let pulses_per_qn = 480;
         let tempo_120_bpm = 500_000;
-        
+
         // Zero ticks should give zero time
         let result = ticks_to_seconds(0, pulses_per_qn, tempo_120_bpm);
         assert_eq!(result, 0.0);
-        
+
         // Fractional beats
         let result = ticks_to_seconds(240, pulses_per_qn, tempo_120_bpm); // Half a quarter note
-        assert!((result - 0.25).abs() < 0.001, "Expected ~0.25s for half beat, got {}", result);
+        assert!(
+            (result - 0.25).abs() < 0.001,
+            "Expected ~0.25s for half beat, got {}",
+            result
+        );
     }
 
     #[test]
     fn test_ticks_to_seconds_different_resolutions() {
         let tempo_120_bpm = 500_000;
-        
+
         // Different MIDI resolutions
         assert!((ticks_to_seconds(96, 96, tempo_120_bpm) - 0.5).abs() < 0.001);
         assert!((ticks_to_seconds(192, 192, tempo_120_bpm) - 0.5).abs() < 0.001);

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use midi2stagetraxx_core::{Extractor, MidiFormatter, StageTraxxFormatter, Message};
+use midi2stagetraxx_core::{Extractor, Message, MidiFormatter, StageTraxxFormatter};
 use midi_file::MidiFile;
 
 #[derive(Parser, Debug)]
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     let formatter = StageTraxxFormatter::new();
 
     let exception_notes: Vec<u8> = args.off_collision_exceptions.unwrap_or_default();
-    
+
     for (event, next) in events.iter().zip(events.iter().skip(1)) {
         let diff = next.timestamp - event.timestamp;
         if let Message::NoteOff(note, _) = event.message {
