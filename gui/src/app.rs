@@ -1,8 +1,9 @@
 use anyhow::{Context, Result};
 use eframe::egui;
+use egui::RichText;
 use midi2stagetraxx_core::{Extractor, Message, MidiEvent, MidiFormatter, StageTraxxFormatter};
 use midi_file::MidiFile;
-use std::path::PathBuf;
+use std::{alloc::Layout, path::PathBuf};
 
 #[derive(Default)]
 pub struct MidiConverterApp {
@@ -89,9 +90,14 @@ impl eframe::App for MidiConverterApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.label("MIDI File:");
+                ui.label(
+                    RichText::new("MIDI File").strong()
+                );
                 if let Some(path) = &self.midi_file_path {
-                    ui.label(path.display().to_string());
+                    let filename = path.file_name()
+                        .and_then(|name| name.to_str())
+                        .unwrap_or("Unknown file");
+                    ui.label(filename).on_hover_text(path.display().to_string());
                 } else {
                     ui.label("No file selected");
                 }
@@ -108,9 +114,17 @@ impl eframe::App for MidiConverterApp {
             ui.separator();
 
             ui.horizontal(|ui| {
-                ui.label("Override MIDI Channel:");
-                ui.text_edit_singleline(&mut self.channel_input);
-                if ui.button("Set").clicked() {
+                let override_midi_tooltip = "Assign this if you want to override the midi channel used in the file with something else.";
+                ui.label(
+                    RichText::new("Override MIDI Channel:").strong()
+                )
+                .on_hover_text(override_midi_tooltip);
+                ui.add(egui::TextEdit::singleline(&mut self.channel_input)
+                    .desired_width(40.0))
+                    .on_hover_text(override_midi_tooltip);
+                if ui.button("Set")
+                    .on_hover_text(override_midi_tooltip)
+                    .clicked() {
                     match self.channel_input.parse::<u8>() {
                         Ok(channel) if channel <= 16 && channel > 0 => {
                             self.override_midi_channel = Some(channel);
@@ -130,14 +144,17 @@ impl eframe::App for MidiConverterApp {
                 }
             });
 
-            ui.checkbox(&mut self.skip_off_note_collisions, "Skip OFF note collisions");
-            ui.small_button("?").on_hover_text("Skip OFF notes that arrive at the same time as ON notes (helps with timing issues for mutually exclusive scenes)");
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut self.skip_off_note_collisions, "Skip OFF note collisions")
+                .on_hover_text("Skip OFF notes that arrive at the same time as ON notes (helps with timing issues for mutually exclusive scenes)");
+            });
 
             if self.skip_off_note_collisions {
                 ui.horizontal(|ui| {
                     ui.label("Exception notes:");
-                    ui.text_edit_singleline(&mut self.exceptions_input);
-                    ui.small_button("?").on_hover_text("Comma-separated MIDI note numbers that should never have their OFF events skipped (e.g., 48,64)");
+                    ui.add(egui::TextEdit::singleline(&mut self.exceptions_input)
+                        .desired_width(100.0));
+                    ui.label("?").on_hover_text("Comma-separated MIDI note numbers that should never have their OFF events skipped (e.g., 48,64)");
                     if ui.button("Set").clicked() {
                         self.off_collision_exceptions.clear();
                         for part in self.exceptions_input.split(',') {
