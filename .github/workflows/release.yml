@@ -130,6 +130,37 @@ jobs:
         with:
           path: artifacts
 
+      - name: Extract release notes
+        id: extract-release-notes
+        run: |
+          # Extract the section for the current tag from CHANGELOG.md
+          TAG="${{ github.ref_name }}"
+
+          # Try to extract content between this version and the next
+          if [ -f CHANGELOG.md ]; then
+            # Extract everything after the current version header until the next version header or end of file
+            NOTES=$(awk -v tag="$TAG" '
+              /^## \[?[0-9]+\.[0-9]+\.[0-9]+/ {
+                if (found) exit;
+                if (index($0, tag) > 0) found=1;
+                next;
+              }
+              found { print }
+            ' CHANGELOG.md)
+
+            # If no notes found, use a default message
+            if [ -z "$NOTES" ]; then
+              NOTES="No release notes found for version $TAG"
+            fi
+
+            # Write to GitHub environment file (handles multiline content properly)
+            echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+            echo "$NOTES" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          else
+            echo "RELEASE_NOTES=CHANGELOG.md not found" >> $GITHUB_ENV
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -141,10 +172,10 @@ jobs:
             # MIDI to StageTraxx Converter
 
             ## What's New
-            - TODO: Add release notes here
+            ${{ env.RELEASE_NOTES }}
 
             ## Downloads
-            - **macOS**: Download the `.tar.gz` file for your architecture (x86_64 or aarch64)
+            - **macOS**: Download the `.tar.gz` file for your architecture (Intel or ARM)
             - **Linux**: Download the Linux `.tar.gz` file
             - **Windows**: Download the `.zip` file
 
