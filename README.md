@@ -1,6 +1,25 @@
 # MIDI to StageTraxx Converter
 
-A tool for converting MIDI files into StageTraxx-compatible format.
+A tool for converting MIDI files into StageTraxx-compatible format. Why?
+
+My band uses backing tracks with [StageTraxx 3](https://stagetraxx.com). StageTraxx can
+also emit midi changes at specific instants in a song which we can use to control lights,
+or change patches & effects on MIDI compatible gear.
+
+I use Logic to construct a MIDI track that contains the changes we need, lined up
+precisely to the track. Then I export this track as a `.mid` file.
+
+The StageTraxx language for midi changes doesn't read MIDI files, instead it uses a
+timestamp-based text format like this:
+
+```
+[midi@00:00.420: N24.127@4]
+[midi@00:01.681: N48.127@4]
+[midi@00:01.751: N48.0@4]
+[midi@00:02.101: N48.127@4]
+```
+
+So I created this tool which will read the MIDI file and convert it to the StageTraxx format.
 
 ![the midi2stagetraxx gui app running on macOS](assets/gui.png)
 
