@@ -3,7 +3,7 @@ use eframe::egui;
 use egui::RichText;
 use midi2stagetraxx_core::{Extractor, Message, MidiEvent, MidiFormatter, StageTraxxFormatter};
 use midi_file::MidiFile;
-use std::{alloc::Layout, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct MidiConverterApp {
