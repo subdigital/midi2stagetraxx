@@ -2,15 +2,17 @@
 
 A tool for converting MIDI files into StageTraxx-compatible format. Why?
 
-My band uses backing tracks with [StageTraxx 3](https://stagetraxx.com). StageTraxx can
+My band uses backing tracks with [StageTraxx 4](https://stagetraxx.com). StageTraxx can
 also emit midi changes at specific instants in a song which we can use to control lights,
 or change patches & effects on MIDI compatible gear.
 
 I use Logic to construct a MIDI track that contains the changes we need, lined up
 precisely to the track. Then I export this track as a `.mid` file.
 
-The StageTraxx language for midi changes doesn't read MIDI files, instead it uses a
-timestamp-based text format like this:
+## Stage Traxx MIDI syntax
+
+Stage Traxx supports sending time-based midi messages with a simple text format that
+you write in the lyrics editor, like this:
 
 ```
 [midi@00:00.420: N24.127@4]
@@ -19,7 +21,16 @@ timestamp-based text format like this:
 [midi@00:02.101: N48.127@4]
 ```
 
-So I created this tool which will read the MIDI file and convert it to the StageTraxx format.
+When playback reaches the time specified, the messages are sent.
+
+## Stage Traxx 4 MIDI file support
+
+The StageTraxx 4 introduced MIDI file support, so this tool may not be necessary, there are cases where you still may want to have this in text format, 
+which makes it easier to _see_ that midi changes are present on a track, and also to enable copy/pasting or slight adjustments on the fly.
+
+## What midi2stagetraxx Does
+
+This tool which reads MIDI files and convertsx it to a set of StageTraxx-compatible messages that you can copy/paste into the Lyrics editor in Stage Traxx.
 
 ![the midi2stagetraxx gui app running on macOS](assets/gui.png)
 
@@ -90,3 +101,8 @@ cd core  # or cli, gui
 cargo build
 cargo test
 ```
+
+## Changelog
+
+- `0.1.0` Initial release
+- `0.2.0` Adds PC (program change) message support
