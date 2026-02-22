@@ -10,4 +10,5 @@ pub enum Message {
     NoteOn(u8, u8),
     NoteOff(u8, u8),
     ControlChange(u8, u8),
+    ProgramChange(u8),
 }

@@ -16,20 +16,24 @@ impl Default for StageTraxxFormatter {
     }
 }
 
+impl crate::midi_event::Message {
+    fn stage_traxx_syntax(&self) -> String {
+        match self {
+            Message::NoteOn(note, velocity) => format!("N{}.{}", note, velocity),
+            Message::NoteOff(note, _) => format!("N{}.{}", note, 0),
+            Message::ControlChange(num, val) => format!("CC{}.{}", num, val),
+            Message::ProgramChange(num) => format!("PC{}", num),
+        }
+    }
+}
+
 impl MidiFormatter for StageTraxxFormatter {
     fn format(&self, event: &MidiEvent) -> String {
         // [midi@00:46.70: CC1.62@4]
-        let params: (&str, u8, u8) = match event.message {
-            Message::NoteOn(note, velocity) => ("N", note, velocity),
-            Message::NoteOff(note, _) => ("N", note, 0),
-            Message::ControlChange(num, val) => ("CC", num, val),
-        };
         format!(
-            "[midi@{timestamp}: {msg}{arg1}.{arg2}@{channel}]",
+            "[midi@{timestamp}: {event}@{channel}]",
             timestamp = format_midi_time(event.timestamp),
-            msg = params.0,
-            arg1 = params.1,
-            arg2 = params.2,
+            event = event.message.stage_traxx_syntax(),
             channel = event.channel
         )
     }

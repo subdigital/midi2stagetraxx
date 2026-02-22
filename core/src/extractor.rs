@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::midi_event;
-use midi_file::core::{ControlChangeValue, NoteMessage};
+use midi_file::core::{ControlChangeValue, NoteMessage, ProgramChangeValue};
 use midi_file::file::SmpteOffsetValue;
 use midi_file::file::TrackEvent;
 use midi_file::file::{Division, MetaEvent};
@@ -115,6 +115,7 @@ impl Extractor {
             Message::NoteOn(note) => Some(self.handle_note(note, timestamp, true)),
             Message::NoteOff(note) => Some(self.handle_note(note, timestamp, false)),
             Message::Control(cc) => Some(self.handle_control_change(cc, timestamp)),
+            Message::ProgramChange(pc) => Some(self.handle_program_change(pc, timestamp)),
             _ => {
                 eprintln!("Unhandled MIDI: {:?} {:?}", dt, msg);
                 None
@@ -173,6 +174,18 @@ impl Extractor {
             "-- SMPTE OFFSET: ({:?}) frame: {}, hr: {}",
             smpte_offset, frame_rate, hr
         );
+    }
+
+    fn handle_program_change(
+        &self,
+        pc: &ProgramChangeValue,
+        timestamp: f64,
+    ) -> midi_event::MidiEvent {
+        midi_event::MidiEvent {
+            timestamp,
+            message: midi_event::Message::ProgramChange(pc.program().get()),
+            channel: self.override_midi_channel.unwrap_or(pc.channel().get() + 1), // midi_file is 0-based
+        }
     }
 }
 
